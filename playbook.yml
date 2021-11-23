@@ -1,0 +1,57 @@
+---
+# override ansible_user from CLI like `-e ansible_user=root --ask-pass`
+- name: Set up Ansible user for managed hosts
+  hosts: all
+  tasks:
+    - name: Ensure group "{{ansible_remote_group}}" exists
+      ansible.builtin.group:
+        name: "{{ansible_remote_group}}"
+        gid: "2000"
+        state: present
+    - name: Add ansible user
+      ansible.builtin.user:
+        name: "{{ ansible_remote_user }}"
+        shell: /bin/bash
+        comment: Ansible User
+        uid: "2000"
+        group: "{{ ansible_remote_group }}"
+        groups: wheel
+        append: yes
+        password: "{{ ansible_remote_password }}"
+      no_log: true
+    - name: Add SSH key to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ ansible_remote_user }}"
+        state: present
+        key: "{{ ansible_remote_pubkey }}"
+
+    # https://blaszkowski.com/2018/09/02/ansible-add-user-to-sudo
+    - name: Add user "{{ansible_remote_user}}" to sudo
+      lineinfile:
+        path: "/etc/sudoers.d/{{ansible_remote_user}}"
+        line: "{{ansible_remote_user}} ALL=(ALL) NOPASSWD: ALL"
+        state: present
+        mode: 0440
+        create: yes
+        validate: 'visudo -cf %s'
+  tags:
+    - never
+    - ansible
+
+- name: Bootstrap managed host OS
+  hosts: all
+  remote_user: "{{ ansible_remote_user }}"
+  become: yes
+  become_method: sudo
+  roles:
+    - name: os-bootstrap
+      tags: bootstrap
+
+- name: Configuring container host OS for hosting containers
+  hosts: container_hosts
+  remote_user: "{{ ansible_remote_user }}"
+  become: yes
+  become_method: sudo
+  roles:
+    - name: podman
+      tags: podman

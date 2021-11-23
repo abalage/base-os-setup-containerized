@@ -1,0 +1,5 @@
+roles:
+  - name: linux-system-roles.network
+    version: 1.4.0
+  - name: linux-system-roles.timesync
+    version: 1.6.2

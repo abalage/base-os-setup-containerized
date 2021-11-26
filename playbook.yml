@@ -2,6 +2,7 @@
 # override ansible_user from CLI like `-e ansible_user=root --ask-pass`
 - name: Set up Ansible user for managed hosts
   hosts: all
+  remote_user: root
   tasks:
     - name: Ensure group "{{ansible_remote_group}}" exists
       ansible.builtin.group:

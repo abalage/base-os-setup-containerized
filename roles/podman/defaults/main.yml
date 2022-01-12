@@ -1,0 +1,26 @@
+---
+# defaults file for podman
+
+## Directories ##
+# should go to main inventory
+storage_root: "/srv/containers"
+
+# should not be changed if not necessary
+# leave these on default especially on SELinux enabled systems
+podman_storage: "{{ storage_root }}/storage"
+container_conf_dir_bind_src: "{{ storage_root }}/config"
+container_data_dir_bind_src: "{{ storage_root }}/volume"
+
+# should go to group_vars/all
+container_conf_dir: "/var/srv/containers/config"
+container_data_dir: "/var/srv/containers/volume"
+
+## Packages ##
+packages_containers:
+  - podman
+#  - buildah
+## buildah was only needed on CentOS 7 with outdated version of podman
+
+podman_config_macvlan: "false"
+podman_config_macvlan_master_interface: "br0"
+podman_config_macvlan_network_name: "containers"

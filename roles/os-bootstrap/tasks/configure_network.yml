@@ -1,0 +1,24 @@
+---
+# tasks file for os-bootstrap
+
+- name: Set up networking
+  include_role:
+    name: linux-system-roles.network
+
+- name: Set up proxy for package manager
+  ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: proxy
+    value: '"{{ http_proxy }}"'
+    backup: yes
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Set up proxy for package manager
+  ini_file:
+    path: /etc/yum.conf
+    section: main
+    option: proxy
+    value: '"{{ http_proxy }}"'
+    backup: yes
+  when: ansible_pkg_mgr == "yum"

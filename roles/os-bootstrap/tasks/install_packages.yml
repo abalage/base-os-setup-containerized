@@ -1,0 +1,28 @@
+---
+# tasks file for os-bootstrap
+
+- name: Installing frequent packages
+  package:
+    name: "{{ item }}"
+    state: installed
+  loop: "{{ packages_common }}"
+  environment: "{{ proxy_env }}"
+
+- name: Enable firewalld
+  ansible.builtin.systemd:
+    name: "firewalld"
+    state: started
+    daemon_reload: yes
+    enabled: yes
+  when: firewalld_enabled == "yes"
+
+- name: Open up management ports in local firewalld
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+    zone: "{{ firewalld_zone }}"
+  loop:
+    "{{ management_ports }}"
+  when: firewalld_enabled == "yes"

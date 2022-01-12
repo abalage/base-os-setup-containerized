@@ -1,0 +1,61 @@
+---
+# tasks file for podman
+
+- name: Installing Packages
+  package:
+    name: "{{ item }}"
+    state: installed
+  loop: "{{ packages_containers }}"
+
+- include: configure_centos7.yml
+
+# https://www.redhat.com/sysadmin/podman-docker-compose
+- name: Setting up podman socket for Docker compatibility
+  check_mode: no
+  block:
+    - name: Enable the systemd socket of podman
+      ansible.builtin.systemd:
+        name: "podman.socket"
+        state: "started"
+        enabled: "yes"
+
+    - name: get the path to podman socket
+      shell:
+        cmd: systemctl show podman.socket | grep ListenStream | cut -d"=" -f2
+      register: podman_listenstream
+
+    - name: set the fact of location of podman socket
+      set_fact:
+        podman_socket: "{{ podman_listenstream.stdout }}"
+
+# https://www.redhat.com/sysadmin/leasing-ips-podman
+- name: Configure MACVLAN and DHCP
+  block:
+    - name: Create MACVLAN CNI network
+      #ansible.builtin.command:
+      ## wait for 2.9.16 or newer (https://github.com/ansible/ansible/blob/v2.9.22/changelogs/CHANGELOG-v2.9.rst)
+      command:
+        cmd: podman network create --macvlan {{ podman_config_macvlan_master_interface }} --driver macvlan {{ podman_config_macvlan_network_name }}
+        creates:  "/etc/cni/net.d/{{ podman_config_macvlan_network_name }}.conflist"
+
+    - name: Copy DHCP systemd unit and socket
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/etc/systemd/system/{{ item }}"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+      loop:
+        - io.podman.dhcp.service
+        - io.podman.dhcp.socket
+
+    - name: Enable the socket of DHCP plugin
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: "started"
+        daemon_reload: yes
+        enabled: "yes"
+      loop:
+        - io.podman.dhcp.socket
+
+  when: podman_config_macvlan == "true"

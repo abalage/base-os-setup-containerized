@@ -1,0 +1,42 @@
+---
+# tasks file for os-bootstrap
+
+- name: Set up NTP client for RedHat systems
+  include_role:
+    name: linux-system-roles.timesync
+  when: ansible_os_family == "RedHat"
+
+- name: Set up NTP client for non RedHat systems
+  when: ansible_os_family != "RedHat"
+  block:
+    - name: Install chronyd
+      ansible.builtin.package:
+        name: chrony
+        state: installed
+      environment: "{{ proxy_env }}"
+
+    - name: Configure chronyd
+      ansible.builtin.template:
+        src: chrony.conf.j2
+        dest: "/etc/chrony.conf"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Disable ntpd if present
+      ansible.builtin.systemd:
+        name: ntpd
+        enabled: no
+        state: stopped
+      when:
+        - "'ntp' in ansible_facts.packages"
+
+    - name: Restart chronyd service
+      ansible.builtin.systemd:
+        name: chronyd
+        enabled: yes
+        state: restarted

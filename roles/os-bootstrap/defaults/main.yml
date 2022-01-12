@@ -1,0 +1,70 @@
+---
+# defaults file for os-bootstrap
+# FIXME python-firewall is a CentOS/Fedora specific thing, it has not been tested on Debian based distros
+packages_common:
+  - firewalld
+  - python-firewall
+management_ports:
+  - "22"
+firewalld_zone: "public"
+firewalld_enabled: "yes"
+
+disable_swap: true
+
+volume_group: "vg01"
+logical_volume: "srv"
+logical_volume_size: "100%FREE"
+logical_volume_path: "/dev/mapper/{{ volume_group }}-{{ logical_volume }}"
+mount_point: "/srv"
+block_device: "/dev/sdb"
+pe_size: "128K"
+
+timesync_ntp_servers:
+  - hostname: 0.opensuse.pool.ntp.org
+    iburst: yes
+  - hostname: 1.opensuse.pool.ntp.org
+    iburst: yes
+  - hostname: 2.opensuse.pool.ntp.org
+    iburst: yes
+  - hostname: 3.opensuse.pool.ntp.org
+    iburst: yes
+
+yum_repositories:
+  - baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    name: epel
+    gpgkey: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-$releasever
+    description: EPEL YUM repo
+    enabled: no
+    state: absent
+
+zypper_repositories:
+  - repo: https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_$releasever
+    name: "Virtualization:containers"
+    description: "Virtualization:containers (openSUSE_Leap_$releasever)"
+    enabled: no
+    state: absent
+
+# This is normally set up in host_vars and not globally
+# https://github.com/linux-system-roles/network/tree/main/examples
+#network_connections:
+#  - name: mgmt
+#    type: ethernet
+#    autoconnect: yes
+#    mac: "11:22:33:aa:bb:cc" # eth0
+#    state: up
+#    ip :
+#      dhcp4: no
+#      address:
+#           - 10.1.1.1/24
+#      auto_gateway: no
+#      gateway4: 10.1.1.254
+#      route:
+#        - network: 192.168.1.1
+#          prefix: 32
+#          gateway: 10.1.1.1
+#      dns:
+#        - 1.1.1.1
+#        - 8.8.8.8
+#      dns_search:
+#        - example.com
+

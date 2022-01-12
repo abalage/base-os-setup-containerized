@@ -1,0 +1,26 @@
+---
+# tasks file for os-bootstrap
+
+- name: Add repository on RedHat
+  yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: yes
+    gpgkey: "{{ item.gpgkey }}"
+    enabled: "{{item.enabled}}"
+  loop: "{{ yum_repositories }}"
+  environment: "{{ proxy_env }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Add repository on Suse
+  zypper_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    repo: "{{ item.repo }}"
+    disable_gpg_check: no
+    auto_import_keys: yes
+    enabled: "{{item.enabled}}"
+  loop: "{{ zypper_repositories }}"
+  environment: "{{ proxy_env }}"
+  when: ansible_os_family == "Suse"

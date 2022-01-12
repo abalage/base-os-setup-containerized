@@ -1,0 +1,25 @@
+---
+#- include: configure_disks.yml
+- name: Include networking
+  include_tasks:
+    file: configure_network.yml
+    apply:
+      tags: network
+  tags: network
+
+- name: Include swap
+  include_tasks:
+    file: disable_swap.yml
+    apply:
+      tags: noswap
+  tags: noswap
+
+- include: install_repo.yml
+- include: install_packages.yml
+
+- name: Include NTP
+  include_tasks:
+    file: configure_ntp.yml
+    apply:
+      tags: ntp
+  tags: ntp

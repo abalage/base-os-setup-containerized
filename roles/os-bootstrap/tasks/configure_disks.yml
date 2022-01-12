@@ -1,0 +1,63 @@
+---
+# tasks file for os-bootstrap
+
+- name: Create volume group on block device
+  community.general.lvg:
+    vg: "{{ volume_group }}"
+    pvs: "{{ block_device }}"
+    pesize: "{{ pe_size }}"
+  tags:
+    - modify_disk
+    - never
+
+- name: Create a logical volume with the size of all remaining space in the volume group
+  community.general.lvol:
+    vg: "{{ volume_group }}"
+    lv: "{{ logical_volume }}"
+    size: "{{ logical_volume_size }}"
+  tags:
+    - modify_disk
+    - never
+
+- name: Get stats of the FS object
+  ansible.builtin.stat:
+    path: "{{ logical_volume_path }}"
+  register: lv
+  tags:
+    - modify_disk
+    - never
+
+- name: Create filesystem on logical volume
+  community.general.filesystem:
+    fstype: xfs
+    resizefs: yes
+    dev: "{{ logical_volume_path }}"
+  when: lv.stat.exists
+  tags:
+    - modify_disk
+    - never
+
+# There could be other existing logical volume mounted at /srv
+- name: Unmount exisiting filesystem from /srv
+  mount:
+    path: "{{ mount_point }}"
+    state: absent
+    backup: yes
+  tags:
+    - modify_disk
+    - never
+
+- name: Mount the new filesystem
+  mount:
+    src: "{{ logical_volume_path }}"
+    path: "{{ mount_point }}"
+    fstype: xfs
+    state: mounted
+    backup: yes
+  tags:
+    - modify_disk
+    - never
+
+# pvcreate /dev/sdb
+# vgcreate vg01 /dev/sdb
+# lvcreate

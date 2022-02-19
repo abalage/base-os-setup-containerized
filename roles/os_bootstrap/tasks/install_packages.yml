@@ -12,17 +12,17 @@
   ansible.builtin.systemd:
     name: "firewalld"
     state: started
-    daemon_reload: yes
-    enabled: yes
-  when: firewalld_enabled == "yes"
+    daemon_reload: true
+    enabled: true
+  when: firewalld_enabled
 
 - name: Open up management ports in local firewalld
   firewalld:
     port: "{{ item }}/tcp"
-    permanent: yes
-    immediate: yes
+    permanent: true
+    immediate: true
     state: enabled
     zone: "{{ firewalld_zone }}"
   loop:
     "{{ management_ports }}"
-  when: firewalld_enabled == "yes"
+  when: firewalld_enabled

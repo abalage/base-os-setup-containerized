@@ -30,7 +30,7 @@
 - name: Create filesystem on logical volume
   community.general.filesystem:
     fstype: xfs
-    resizefs: yes
+    resizefs: true
     dev: "{{ logical_volume_path }}"
   when: lv.stat.exists
   tags:
@@ -42,7 +42,7 @@
   mount:
     path: "{{ mount_point }}"
     state: absent
-    backup: yes
+    backup: true
   tags:
     - modify_disk
     - never
@@ -53,7 +53,7 @@
     path: "{{ mount_point }}"
     fstype: xfs
     state: mounted
-    backup: yes
+    backup: true
   tags:
     - modify_disk
     - never

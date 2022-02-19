@@ -62,7 +62,7 @@
   become: yes
   become_method: sudo
   roles:
-    - name: os-bootstrap
+    - name: os_bootstrap
       tags: bootstrap
 
 - name: Configuring container host OS for hosting containers

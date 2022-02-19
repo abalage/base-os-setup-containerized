@@ -6,9 +6,9 @@
     name: "{{ item.name }}"
     description: "{{ item.description }}"
     baseurl: "{{ item.baseurl }}"
-    gpgcheck: yes
+    gpgcheck: true
     gpgkey: "{{ item.gpgkey }}"
-    enabled: "{{item.enabled}}"
+    enabled: "{{ item.enabled }}"
   loop: "{{ yum_repositories }}"
   environment: "{{ proxy_env }}"
   when: ansible_os_family == "RedHat"
@@ -18,9 +18,9 @@
     name: "{{ item.name }}"
     description: "{{ item.description }}"
     repo: "{{ item.repo }}"
-    disable_gpg_check: no
-    auto_import_keys: yes
-    enabled: "{{item.enabled}}"
+    disable_gpg_check: false
+    auto_import_keys: true
+    enabled: "{{ item.enabled }}"
   loop: "{{ zypper_repositories }}"
   environment: "{{ proxy_env }}"
   when: ansible_os_family == "Suse"

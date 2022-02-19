@@ -10,8 +10,9 @@
     path: /etc/dnf/dnf.conf
     section: main
     option: proxy
+    mode: 0644
     value: '"{{ http_proxy }}"'
-    backup: yes
+    backup: true
   when: ansible_pkg_mgr == "dnf"
 
 - name: Set up proxy for package manager
@@ -19,6 +20,7 @@
     path: /etc/yum.conf
     section: main
     option: proxy
+    mode: 0644
     value: '"{{ http_proxy }}"'
-    backup: yes
+    backup: true
   when: ansible_pkg_mgr == "yum"

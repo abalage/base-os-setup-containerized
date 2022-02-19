@@ -31,7 +31,7 @@
         uid: "2000"
         group: "{{ ansible_remote_group }}"
         groups: wheel
-        append: yes
+        append: true
         password: "{{ ansible_remote_password }}"
       no_log: true
       when: ansible_os_family != "Debian"
@@ -50,7 +50,7 @@
         line: "{{ ansible_remote_user }} ALL=(ALL) NOPASSWD: ALL"
         state: present
         mode: 0440
-        create: yes
+        create: true
         validate: 'visudo -cf %s'
   tags:
     - never
@@ -59,7 +59,7 @@
 - name: Bootstrap managed host OS
   hosts: all
   remote_user: "{{ ansible_remote_user }}"
-  become: yes
+  become: true
   become_method: sudo
   roles:
     - name: os_bootstrap
@@ -68,7 +68,7 @@
 - name: Configuring container host OS for hosting containers
   hosts: container_hosts
   remote_user: "{{ ansible_remote_user }}"
-  become: yes
+  become: true
   become_method: sudo
   roles:
     - name: podman

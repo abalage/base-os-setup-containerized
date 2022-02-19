@@ -1,60 +1,61 @@
 ---
 
 - name: Configuring Podman for CentOS 7
-  block:
-  - name: Ensure necessary container directories exist
-    file:
-      path: "{{ item }}"
-      state: directory
-    loop:
-      - "{{ podman_storage }}"
-      - "{{ container_conf_dir_bind_src }}"
-      - "{{ container_data_dir_bind_src }}"
-      - "{{ container_conf_dir }}"
-      - "{{ container_data_dir }}"
-
-  - name: Mount and bind container config directory
-    mount:
-      path: "{{ container_conf_dir }}"
-      src: "{{ container_conf_dir_bind_src }}"
-      opts: defaults,rbind
-      backup: yes
-      state: mounted
-      fstype: none
-
-  - name: Mount and bind container volume directory
-    mount:
-      path: "{{ container_data_dir }}"
-      src: "{{ container_data_dir_bind_src }}"
-      opts: defaults,rbind
-      backup: yes
-      state: mounted
-      fstype: none
-
-  - name: Ensure container storage directory is set
-    ini_file:
-      path: /etc/containers/storage.conf
-      section: storage
-      option: graphroot
-      value: '"{{ podman_storage }}"'
-      backup: yes
-
-  - name: Allow podman to modify files in storage directory
-    # https://ahelpme.com/software/podman/change-the-location-of-container-storage-in-podman-with-selinux-enabled/
-    # TODO the correct solution would be fcontext --add --equal but it is not supported by sefcontext module yet
-    # https://github.com/ansible-collections/community.general/issues/1193
-    #
-    # community.general.sefcontext:
-    #   target: "{{ podman_storage }}(/.*)?"
-    #   setype: container_var_lib_t
-    #   state: present
-    #
-    # Workaround is taken from:
-    # https://serverfault.com/questions/1042640/ansible-module-for-adding-an-selinux-context-equivalence
-    shell:
-      cmd: semanage fcontext -a -e /var/lib/containers "{{ podman_storage }}" || true
-
-  - name: Restore SELinux labeling
-    command: restorecon -ir "{{ podman_storage }}"
-
   when: ansible_facts['distribution'] == 'CentOS'
+  block:
+    - name: Ensure necessary container directories exist
+      file:
+        path: "{{ item }}"
+        mode: 0755
+        state: directory
+      loop:
+        - "{{ podman_storage }}"
+        - "{{ container_conf_dir_bind_src }}"
+        - "{{ container_data_dir_bind_src }}"
+        - "{{ container_conf_dir }}"
+        - "{{ container_data_dir }}"
+
+    - name: Mount and bind container config directory
+      mount:
+        path: "{{ container_conf_dir }}"
+        src: "{{ container_conf_dir_bind_src }}"
+        opts: defaults,rbind
+        backup: true
+        state: mounted
+        fstype: none
+
+    - name: Mount and bind container volume directory
+      mount:
+        path: "{{ container_data_dir }}"
+        src: "{{ container_data_dir_bind_src }}"
+        opts: defaults,rbind
+        backup: true
+        state: mounted
+        fstype: none
+
+    - name: Ensure container storage directory is set
+      ini_file:
+        path: /etc/containers/storage.conf
+        section: storage
+        option: graphroot
+        mode: 0644
+        value: '"{{ podman_storage }}"'
+        backup: true
+
+    - name: Allow podman to modify files in storage directory
+      # https://ahelpme.com/software/podman/change-the-location-of-container-storage-in-podman-with-selinux-enabled/
+      # TODO the correct solution would be fcontext --add --equal but it is not supported by sefcontext module yet
+      # https://github.com/ansible-collections/community.general/issues/1193
+      #
+      # community.general.sefcontext:
+      #   target: "{{ podman_storage }}(/.*)?"
+      #   setype: container_var_lib_t
+      #   state: present
+      #
+      # Workaround is taken from:
+      # https://serverfault.com/questions/1042640/ansible-module-for-adding-an-selinux-context-equivalence
+      shell:
+        cmd: semanage fcontext -a -e /var/lib/containers "{{ podman_storage }}" || true
+
+    - name: Restore SELinux labeling
+      command: restorecon -ir "{{ podman_storage }}"

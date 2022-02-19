@@ -11,13 +11,13 @@
 
 # https://www.redhat.com/sysadmin/podman-docker-compose
 - name: Setting up podman socket for Docker compatibility
-  check_mode: no
+  check_mode: false
   block:
     - name: Enable the systemd socket of podman
       ansible.builtin.systemd:
         name: "podman.socket"
         state: "started"
-        enabled: "yes"
+        enabled: "true"
 
     - name: get the path to podman socket
       shell:
@@ -53,8 +53,8 @@
       ansible.builtin.systemd:
         name: "{{ item }}"
         state: "started"
-        daemon_reload: yes
-        enabled: "yes"
+        daemon_reload: true
+        enabled: true
       loop:
         - io.podman.dhcp.socket
 
